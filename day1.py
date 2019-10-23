@@ -1,5 +1,5 @@
-from dataclasses import dataclass
 from enum import Enum, auto
+from lib import Point
 
 
 class Direction(Enum):
@@ -7,19 +7,6 @@ class Direction(Enum):
     EAST = auto()
     SOUTH = auto()
     WEST = auto()
-
-
-@dataclass(frozen=True, eq=True)
-class Point:
-    x: int
-    y: int
-
-    def __str__(self):
-        return "x: {0}, y: {1}".format(self.x, self.y)
-
-    def move(self, x, y):
-        return Point(self.x + x, self.y + y)
-
 
 class Position:
 

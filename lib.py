@@ -22,3 +22,12 @@ class Point:
 
     def copy(self):
         return Point(self.x, self.y)
+
+
+def get_lines(file_name: str) -> list:
+    with open(file_name) as file:
+        lines = file.readlines()
+    return lines
+
+
+cat = "".join

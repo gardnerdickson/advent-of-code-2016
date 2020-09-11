@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import List, Tuple
 
 
 @dataclass(init=False)
@@ -6,10 +7,11 @@ class SlidingWindow:
     start: int = 0
     end: int = 4
 
-    def __init__(self, address: str):
+    def __init__(self, address: str, length: int = 4):
         if self.end > len(address):
             raise Exception("Address must be at least 4 characters.")
         self.address = address
+        self.end = self.length = length
         self.prev_address = None
         self.in_hypernet_sequence = '[' in self.get()
 
@@ -28,8 +30,13 @@ class SlidingWindow:
     def is_out_of_bounds(self):
         return self.end > len(self.address)
 
+    def iter(self):
+        while not self.is_out_of_bounds():
+            yield self.get()
+            self.increment()
 
-def day_7_1(input_file: str):
+
+def day_7_1(input_file: str) -> int:
     with open(input_file, 'r') as fh:
         addresses = fh.read().splitlines()
 
@@ -50,5 +57,69 @@ def day_7_1(input_file: str):
     return len(tls_addresses)
 
 
+def extract_sequences(address: str) -> Tuple[List[str], List[str]]:
+    supernet_sequences: List[str] = []
+    hypernet_sequences: List[str] = []
+    cur_supernet = []
+    cur_hypernet = []
+    in_hypernet_sequence = False
+    for char in address:
+        if char == '[':  # supernet end, hypernet start
+            in_hypernet_sequence = True
+            cur_hypernet = []
+            supernet_sequences.append(''.join(cur_supernet))
+            continue
+        elif char == ']':  # hypernet end, supernet start
+            in_hypernet_sequence = False
+            cur_supernet = []
+            hypernet_sequences.append(''.join(cur_hypernet))
+            continue
+
+        if in_hypernet_sequence:
+            cur_hypernet.append(char)
+        else:
+            cur_supernet.append(char)
+
+    supernet_sequences.append(''.join(cur_supernet))
+    return supernet_sequences, hypernet_sequences
+
+
+def find_abas(supernet_sequences: List[str]) -> List[str]:
+    abas = []
+    for sequence in supernet_sequences:
+        window = SlidingWindow(sequence, 3)
+        for substr in window.iter():
+            if substr[0] == substr[2]:
+                abas.append(substr)
+    return abas
+
+
+def find_babs(hypernet_sequences: List[str], abas: List[str]) -> bool:
+    for sequence in hypernet_sequences:
+        window = SlidingWindow(sequence, 3)
+        for substr in window.iter():
+            for aba in abas:
+                bab = aba[1] + aba[0] + aba[1]
+                if bab == substr:
+                    return True
+    return False
+
+
+def day_7_2(input_file: str) -> int:
+    with open(input_file, 'r') as fh:
+        addresses = fh.read().splitlines()
+
+    ssl_addresses = set()
+    for address in addresses:
+        supernet_sequences, hypernet_sequences = extract_sequences(address)
+        abas = find_abas(supernet_sequences)
+        has_bab = find_babs(hypernet_sequences, abas)
+        if has_bab:
+            ssl_addresses.add(address)
+    return len(ssl_addresses)
+
+
 answer_1 = day_7_1("input7.txt")
 print(f"Part 1: {answer_1}")
+answer_2 = day_7_2("input7.txt")
+print(f"Part 2: {answer_2}")

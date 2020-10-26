@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import List, Tuple
+import re
 
 
 @dataclass(init=False)
@@ -58,30 +59,11 @@ def day_7_1(input_file: str) -> int:
 
 
 def extract_sequences(address: str) -> Tuple[List[str], List[str]]:
-    supernet_sequences: List[str] = []
-    hypernet_sequences: List[str] = []
-    cur_supernet = []
-    cur_hypernet = []
-    in_hypernet_sequence = False
-    for char in address:
-        if char == '[':  # supernet end, hypernet start
-            in_hypernet_sequence = True
-            cur_hypernet = []
-            supernet_sequences.append(''.join(cur_supernet))
-            continue
-        elif char == ']':  # hypernet end, supernet start
-            in_hypernet_sequence = False
-            cur_supernet = []
-            hypernet_sequences.append(''.join(cur_hypernet))
-            continue
-
-        if in_hypernet_sequence:
-            cur_hypernet.append(char)
-        else:
-            cur_supernet.append(char)
-
-    supernet_sequences.append(''.join(cur_supernet))
-    return supernet_sequences, hypernet_sequences
+    supernet_regex = r'([\w]+\[|\][\w]+)'
+    hypernet_regex = r'(\[[\w]+\])'
+    supernet_matches = re.findall(supernet_regex, address)
+    hypernet_matches = re.findall(hypernet_regex, address)
+    return list(map(lambda seq: seq.strip('[').strip(']'), supernet_matches)), hypernet_matches
 
 
 def find_abas(supernet_sequences: List[str]) -> List[str]:
